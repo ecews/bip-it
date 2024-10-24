@@ -42,6 +42,7 @@ public class RagService {
 
 
     public Flux<String> streamChat(String message) {
+        log.info("generating response for {}", message);
         var prompt = createPrompt(message);
         return chatClient.prompt(prompt).stream().content()
                 .bufferUntil(s -> s.endsWith(" "))
