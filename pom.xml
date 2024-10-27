@@ -160,7 +160,7 @@
 				</executions>
 				<configuration>
 					<nodeVersion>v18.18.0</nodeVersion>
-					<workingDirectory>src/main/bip-it-client</workingDirectory>
+					<workingDirectory>src/main/webapp</workingDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -177,7 +177,7 @@
 							<outputDirectory>target/classes/static</outputDirectory>
 							<resources>
 								<resource>
-									<directory>src/main/bip-it-client/build</directory>
+									<directory>/build</directory>
 									<filtering>true</filtering>
 								</resource>
 							</resources>
