@@ -1,5 +1,9 @@
 package com.ecews.bipit.service;
 
+import org.commonmark.node.BulletList;
+import org.commonmark.node.ListItem;
+import org.commonmark.node.Paragraph;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -12,8 +16,10 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import org.commonmark.parser.Parser;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,9 +37,32 @@ public class RagService {
     public Flux<String> streamChat(String message) {
         log.info("generating response for {}", message);
         var prompt = createPrompt(message);
+        // Initialize CommonMark parser and HTML renderer
+        Parser parser = Parser.builder().build();
+        HtmlRenderer renderer = HtmlRenderer.builder().build();
+
         return chatClient.prompt(prompt).stream().content()
-                .bufferUntil(s -> s.endsWith(" "))
-                .map(list -> String.join("", list));
+                .bufferUntil(s -> s.endsWith(" ")) // Buffer by sentence or meaningful units
+                .map(list -> String.join("", list)) // Join buffered parts into a single string
+                .map(content -> {
+                    String adjustedContent = content.replaceAll(" - ", "\n - ")
+                            .replaceAll("important keyword", "**important keyword**")  // Make keywords bold
+                            .replaceAll("\\b(Note|Warning):\\b", "**$1:**")
+                            .replaceAll("\\s*\\n{2,}", "\n\n- ")
+                            .replaceAll("(?i)\\bNote:\\b", "\n\n### Note:\n\n")  // Convert "Note:" to a heading
+                            .replaceAll("(?i)\\bImportant:\\b", "\n\n- **Important:** "); // Convert to bullet points// Bold keywords like "Note" or "Warning"// Example for creating bullet lists
+                    var document = parser.parse(adjustedContent);
+
+                    // Optionally, make specific content modifications programmatically
+                    BulletList bulletList = new BulletList();
+                    ListItem item = new ListItem();
+                    Paragraph paragraph = new Paragraph();
+                    item.appendChild(paragraph);
+                    bulletList.appendChild(item);
+                    document.appendChild(bulletList);
+
+                    return renderer.render(document);
+                });
     }
 
 
