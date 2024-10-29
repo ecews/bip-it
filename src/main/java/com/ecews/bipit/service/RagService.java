@@ -2,6 +2,7 @@ package com.ecews.bipit.service;
 
 import org.commonmark.node.BulletList;
 import org.commonmark.node.ListItem;
+import org.commonmark.node.Node;
 import org.commonmark.node.Paragraph;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.slf4j.Logger;
@@ -34,37 +35,38 @@ public class RagService {
         this.vectorStore = vectorStore;
     }
 
+
     public Flux<String> streamChat(String message) {
-        log.info("generating response for {}", message);
-        var prompt = createPrompt(message);
-        // Initialize CommonMark parser and HTML renderer
+        log.info("Generating response for {}", message);
         Parser parser = Parser.builder().build();
         HtmlRenderer renderer = HtmlRenderer.builder().build();
+        // Generate prompt only once
+        var prompt = createPrompt(message);
+        return processPromptToFormattedFlux(prompt, parser, renderer);
+    }
 
+    private Flux<String> processPromptToFormattedFlux(Prompt prompt, Parser parser, HtmlRenderer renderer) {
         return chatClient.prompt(prompt).stream().content()
-                .bufferUntil(s -> s.endsWith(" ")) // Buffer by sentence or meaningful units
-                .map(list -> String.join("", list)) // Join buffered parts into a single string
+                .bufferUntil(s -> s.endsWith(" "))
+                .map(list -> {
+                    // Use StringBuilder for efficient concatenation
+                    StringBuilder contentBuilder = new StringBuilder();
+                    list.forEach(contentBuilder::append);
+                    return contentBuilder.toString();
+                })
                 .map(content -> {
-                    String adjustedContent = content.replaceAll(" - ", "\n - ")
-                            .replaceAll("important keyword", "**important keyword**")  // Make keywords bold
-                            .replaceAll("\\b(Note|Warning):\\b", "**$1:**")
-                            .replaceAll("\\s*\\n{2,}", "\n\n- ")
-                            .replaceAll("(?i)\\bNote:\\b", "\n\n### Note:\n\n")  // Convert "Note:" to a heading
-                            .replaceAll("(?i)\\bImportant:\\b", "\n\n- **Important:** "); // Convert to bullet points// Bold keywords like "Note" or "Warning"// Example for creating bullet lists
-                    var document = parser.parse(adjustedContent);
+                    // Consolidate replacements into one regex pattern
+                    String adjustedContent = content
+                            .replaceAll(" - ", "\n - ")
+                            .replaceAll("(?i)(\\bNote:\\b|\\bWarning:\\b|\\bImportant:\\b)", "**$1**")
+                            .replaceAll("(?i)\\b(Note|Warning):\\b", "**$1:**")
+                            .replaceAll("\\s*\\n{2,}", "\n\n- ");  // Bullet point creation
 
-                    // Optionally, make specific content modifications programmatically
-                    BulletList bulletList = new BulletList();
-                    ListItem item = new ListItem();
-                    Paragraph paragraph = new Paragraph();
-                    item.appendChild(paragraph);
-                    bulletList.appendChild(item);
-                    document.appendChild(bulletList);
-
+                    // Parse and render
+                    Node document = parser.parse(adjustedContent);
                     return renderer.render(document);
                 });
     }
-
 
     private Prompt createPrompt(String message) {
         SearchRequest searchRequest = SearchRequest.query(message);
