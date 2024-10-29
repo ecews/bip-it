@@ -1,11 +1,27 @@
-@import url("https://fonts.googleapis.com/css2?family=Varela+Round&display=swap");
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Varela Round", sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.markdown-content {
+    max-width: 700px;  /* Limit width to prevent overly long lines */
+    line-height: 1.8;  /* Increased line height for readability */
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    word-wrap: break-word;
+    color: #444;
 }
 
-body {
-  background-color: #151010;
+.markdown-content p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    line-height: 1.6;
+}
+
+.markdown-content .intro-paragraph {
+    font-weight: bold;
+    background-color: #f7f7f7;
+    padding: 1em;
+    border-radius: 5px;
+    margin-bottom: 1em;
 }

@@ -7,7 +7,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableAsync
-public class BipitApplication {
+public class
+BipitApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(BipitApplication.class, args);
