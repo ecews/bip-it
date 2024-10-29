@@ -1,9 +1,7 @@
 package com.ecews.bipit.service;
 
-import org.commonmark.node.BulletList;
-import org.commonmark.node.ListItem;
 import org.commonmark.node.Node;
-import org.commonmark.node.Paragraph;
+import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +15,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import org.commonmark.parser.Parser;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
