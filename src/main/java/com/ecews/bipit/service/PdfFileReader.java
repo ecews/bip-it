@@ -27,11 +27,23 @@ public class PdfFileReader {
     @Value("classpath:FY-2024-PEPFAR-Technical-Considerations.pdf")
     private Resource pdfResource2;
 
-    @Value("classpath:National-HIV-Treatment-Guideline.pdf")
-    private Resource pdfResource3;
+//    @Value("classpath:National-HIV-Treatment-Guideline.pdf")
+//    private Resource pdfResource3;
 
     @Value("classpath:PEPFAR-Addendum-to-Fiscal-Year-2024-Final.pdf")
     private Resource pdfResource4;
+
+    @Value("classpath:FY25-MER-2.8-Indicator-Reference-Guide.pdf")
+    private Resource pdfResource5;
+
+    @Value("classpath:FY25 MER 2.8 Guidance FAQ.pdf")
+    private Resource pdfResource6;
+
+    @Value("classpath:Indicator Frequency Table MER v2.8.pdf")
+    private Resource pdfResource7;
+
+    @Value("classpath:MER Infographic 2.8.pdf")
+    private Resource pdfResource8;
 
     public PdfFileReader(VectorStore vectorStore, DocumentStatusRepository documentStatusRepository) {
         this.vectorStore = vectorStore;
@@ -41,16 +53,22 @@ public class PdfFileReader {
     @PostConstruct
     @Transactional
     public void init() {
-        processPdfIfNotPopulated("FY24-MER-2.7.pdf", pdfResource1);
+       // processPdfIfNotPopulated("FY24-MER-2.7.pdf", pdfResource1);
         processPdfIfNotPopulated("FY-2024-PEPFAR-Technical-Considerations.pdf", pdfResource2);
         processPdfIfNotPopulated("PEPFAR-Addendum-to-Fiscal-Year-2024-Final.pdf", pdfResource4);
+        processPdfIfNotPopulated("FY25-MER-2.8-Indicator-Reference-Guide.pdf", pdfResource5);
+        processPdfIfNotPopulated("FY25 MER 2.8 Guidance FAQ.pdf", pdfResource6);
+        processPdfIfNotPopulated("Indicator Frequency Table MER v2.8.pdf", pdfResource7);
+        processPdfIfNotPopulated("MER Infographic 2.8.pdf", pdfResource8);
     }
 
     private void processPdfIfNotPopulated(String documentName, Resource pdfResource) {
         Optional<DocumentStatus> docStatus = documentStatusRepository.findByDocumentName(documentName);
 
         if (docStatus.isEmpty() || !docStatus.get().isPopulated()) {
+            System.out.println("populating : "+ documentName);
             processPdf(pdfResource);
+            System.out.println("done populating : "+ documentName);
             documentStatusRepository.save(new DocumentStatus(documentName, true));
         }
     }
@@ -64,6 +82,6 @@ public class PdfFileReader {
                 .build();
         var pdfReader = new PagePdfDocumentReader(pdfResource, config);
         var textSplitter = new TokenTextSplitter();
-        vectorStore.accept(textSplitter.apply(pdfReader.get()));
+        vectorStore.add(textSplitter.apply(pdfReader.get()));
     }
 }

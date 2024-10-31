@@ -56,13 +56,14 @@ public class RagService {
                             .replaceAll(" - ", "\n - ")
                             .replaceAll("(?i)(\\bNote:\\b|\\bWarning:\\b|\\bImportant:\\b)", "**$1**")
                             .replaceAll("(?i)\\b(Note|Warning):\\b", "**$1:**")
-                            .replaceAll("\\s*\\n{2,}", "\n\n- ");  // Bullet point creation
+                            .replaceAll("\\s*\\n{2,}(?![^()]*\\))", "\n\n- ");  // Bullet point creation, avoiding line breaks within parentheses
 
                     // Parse and render
                     Node document = parser.parse(adjustedContent);
                     return renderer.render(document);
                 });
     }
+
 
     private Prompt createPrompt(String message) {
         SearchRequest searchRequest = SearchRequest.query(message);
